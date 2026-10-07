@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 const WEBHOOK_SECRET = process.env.N8N_WEBHOOK_SECRET;
 
@@ -44,6 +44,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     if (!secretoValido(request.headers.get("x-webhook-secret"))) {
       return NextResponse.json(
         { success: false, error: "No autorizado. Token inválido." },
