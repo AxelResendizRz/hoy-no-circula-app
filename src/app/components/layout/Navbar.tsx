@@ -12,7 +12,7 @@ export default function Navbar() {
             {/* Logo / Nombre de la app */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-linear-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-xl font-black shadow-md">
-                🚘
+                <img src="/icon-preview.png" alt="Logo" />
               </div>
               <div>
                 <span className="text-xl font-black text-slate-900 tracking-tight block leading-none">
