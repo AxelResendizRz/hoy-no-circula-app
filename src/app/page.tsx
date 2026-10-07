@@ -1,69 +1,179 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import {
+  evaluarCirculacion,
+  Holograma,
+  ResultadoCirculacion,
+} from "@/lib/circulacion";
 
 export default function Home() {
+  const [holograma, setHolograma] = useState<Holograma>("0");
+  const [placa, setPlaca] = useState<number>(5);
+  const [diaSemana, setDiaSemana] = useState<number>(1);
+
+  const [contingenciaActiva, setContingenciaActiva] = useState<boolean>(false);
+  const [faseContingencia, setFaseContingencia] = useState<number>(0);
+  const [fuenteContingencia, setFuenteContingencia] = useState<string>("");
+  const [cargandoApi, setCargandoApi] = useState<boolean>(true);
+
+  const obtenerEstadoContingencia = useCallback(async () => {
+    setCargandoApi(true);
+    try {
+      const res = await fetch("/api/contingencia");
+      if (res.ok) {
+        const json = await res.json();
+        const data = json.data || {};
+        setContingenciaActiva(data.activa ?? false);
+        setFaseContingencia(data.fase ?? 0);
+        setFuenteContingencia(data.fuente ?? "Manual / Sistema");
+      }
+    } catch (error) {
+      console.error("Error al consultar el estado de contingencia:", error);
+    } finally {
+      setCargandoApi(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    obtenerEstadoContingencia();
+  }, [obtenerEstadoContingencia]);
+
+  const resultado: ResultadoCirculacion = evaluarCirculacion({
+    holograma,
+    terminacionPlaca: placa,
+    diaSemana: Number(diaSemana),
+    esContingencia: contingenciaActiva,
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main className="min-h-screen bg-slate-900 text-slate-100 p-6 flex flex-col items-center justify-center">
+      <div className="max-w-md w-full bg-slate-800 rounded-2xl shadow-xl p-6 space-y-6 border border-slate-700">
+        <header className="text-center">
+          <h1 className="text-2xl font-bold text-emerald-400">
+            Hoy No Circula Edomex
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+          <p className="text-xs text-slate-400 mt-1">
+            Verificador en tiempo real
+          </p>
+        </header>
+
+        <div
+          className={`p-4 rounded-xl border flex items-center justify-between transition-colors ${
+            contingenciaActiva
+              ? "bg-rose-950/40 border-rose-500/50 text-rose-300"
+              : "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
+          }`}
+        >
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider block">
+              Estado Ambiental (API)
+            </span>
+            <span className="text-sm font-medium">
+              {cargandoApi
+                ? "Consultando API..."
+                : contingenciaActiva
+                  ? `🔴 Contingencia Fase ${faseContingencia}`
+                  : "🟢 Normal (Sin Contingencia)"}
+            </span>
+            {fuenteContingencia && (
+              <span className="text-[10px] block opacity-70 mt-0.5">
+                Fuente: {fuenteContingencia}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={obtenerEstadoContingencia}
+            disabled={cargandoApi}
+            className="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded-lg transition-colors text-slate-200"
+          >
+            {cargandoApi ? "..." : "🔄"}
+          </button>
+        </div>
+
+        {/* Formulario de selección */}
+        <div className="space-y-4">
+          {/* Holograma */}
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Holograma:
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {(["00", "0", "1", "2"] as Holograma[]).map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => setHolograma(h)}
+                  className={`py-2 text-sm font-semibold rounded-lg border transition ${
+                    holograma === h
+                      ? "bg-emerald-500 border-emerald-400 text-slate-950"
+                      : "bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600"
+                  }`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Placa */}
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Último dígito de la placa:
+            </label>
+            <select
+              value={placa}
+              onChange={(e) => setPlaca(Number(e.target.value))}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <option key={num} value={num}>
+                  Terminación {num}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Día de la semana */}
+          <div>
+            <label className="block text-xs font-medium text-slate-300 mb-1">
+              Día de la semana:
+            </label>
+            <select
+              value={diaSemana}
+              onChange={(e) => setDiaSemana(Number(e.target.value))}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2 px-3 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              Learning
-            </a>{" "}
-            center.
+              <option value={1}>Lunes</option>
+              <option value={2}>Martes</option>
+              <option value={3}>Miércoles</option>
+              <option value={4}>Jueves</option>
+              <option value={5}>Viernes</option>
+              <option value={6}>Sábado</option>
+              <option value={0}>Domingo</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Semáforo visual del resultado */}
+        <div
+          className={`p-5 rounded-2xl border text-center space-y-2 transition-colors ${
+            resultado.circula
+              ? "bg-emerald-950/50 border-emerald-500/50 text-emerald-300"
+              : "bg-rose-950/50 border-rose-500/50 text-rose-300"
+          }`}
+        >
+          <span className="text-xs font-semibold tracking-widest uppercase block opacity-80">
+            Resultado
+          </span>
+          <div className="text-3xl font-extrabold uppercase tracking-wide">
+            {resultado.circula ? "🚗 SÍ CIRCULA" : "🚫 NO CIRCULA"}
+          </div>
+          <p className="text-xs opacity-90 max-w-xs mx-auto leading-relaxed">
+            {resultado.motivo}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
