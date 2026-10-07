@@ -388,7 +388,7 @@ export default function Home() {
                   </div>
 
                   {/* CALENDARIO SEMANAL */}
-                  <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
+                  <div className="bg-white rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-200/80 space-y-4">
                     <div>
                       <h2 className="text-xl font-black text-slate-900">
                         Calendario de la semana
@@ -398,13 +398,13 @@ export default function Home() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-5 items-center gap-1 lg:gap-2">
                       {ENGOMADOS.map((eng) => {
                         const esHoy = eng.id === engomadoHoy?.id;
                         return (
                           <div
                             key={eng.id}
-                            className={`rounded-2xl p-2.5 text-center transition-all ${eng.colorBg} ${eng.textColor} ${
+                            className={`rounded-2xl lg-p-2.5 text-center transition-all ${eng.colorBg} ${eng.textColor} ${
                               esHoy
                                 ? "ring-4 ring-slate-900 scale-105 shadow-md"
                                 : "opacity-60"

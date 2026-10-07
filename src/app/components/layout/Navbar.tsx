@@ -32,24 +32,6 @@ export default function Navbar() {
               >
                 Inicio
               </a>
-              <a
-                href="#verificador"
-                className="hover:text-slate-900 transition-colors"
-              >
-                ¿Circulo hoy?
-              </a>
-              <a
-                href="#sabado"
-                className="hover:text-slate-900 transition-colors"
-              >
-                Sabatino
-              </a>
-              <a
-                href="#foraneos"
-                className="hover:text-slate-900 transition-colors"
-              >
-                Foráneos
-              </a>
             </div>
 
             {/* Botón de Menú Móvil */}
@@ -97,31 +79,9 @@ export default function Navbar() {
             >
               Inicio
             </a>
-            <a
-              href="#verificador"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 px-3 rounded-xl hover:bg-slate-50"
-            >
-              ¿Circulo hoy?
-            </a>
-            <a
-              href="#sabado"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 px-3 rounded-xl hover:bg-slate-50"
-            >
-              Sabatino
-            </a>
-            <a
-              href="#foraneos"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 px-3 rounded-xl hover:bg-slate-50"
-            >
-              Foráneos
-            </a>
           </div>
         )}
       </nav>
-      ;
     </>
   );
 }
