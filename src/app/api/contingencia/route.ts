@@ -12,7 +12,57 @@ function secretoValido(recibido: string | null): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-export async function GET() {
+async function ejecutarScrapingYActualizar() {
+  const supabaseAdmin = getSupabaseAdmin();
+
+  const resCAMe = await fetch("https://www.gob.mx/came", { cache: "no-store" });
+  const html = await resCAMe.text();
+
+  const htmlLower = html.toLowerCase();
+  const activa =
+    htmlLower.includes("fase 1") ||
+    htmlLower.includes("fase i") ||
+    htmlLower.includes("se activa contingencia");
+  const fase = activa ? 1 : 0;
+  const { data, error } = await supabaseAdmin
+    .from("contingencia")
+    .update({
+      activa,
+      fase,
+      detalles: activa ? "Contingencia Fase 1 activada" : "Sin contingencia",
+      fuente: "Vercel Cron Job (CAMe)",
+      ultima_actualizacion: new Date().toISOString(),
+    })
+    .eq("id", 1)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function GET(request: NextRequest) {
+  const isCron =
+    request.headers.get("authorization") ===
+      `Bearer ${process.env.CRON_SECRET}` ||
+    request.nextUrl.searchParams.get("cron") === "true";
+
+  if (isCron) {
+    try {
+      const data = await ejecutarScrapingYActualizar();
+      return NextResponse.json({
+        success: true,
+        message: "Cron ejecutado con éxito",
+        data,
+      });
+    } catch (err: any) {
+      console.error("Error en Vercel Cron:", err.message);
+      return NextResponse.json(
+        { success: false, error: err.message },
+        { status: 500 },
+      );
+    }
+  }
   const { data, error } = await supabase
     .from("contingencia")
     .select("*")
@@ -62,13 +112,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (fase !== undefined && fase !== null && !Number.isInteger(fase)) {
-      return NextResponse.json(
-        { success: false, error: 'El campo "fase" debe ser un entero.' },
-        { status: 400 },
-      );
-    }
-
     const { data, error } = await supabaseAdmin
       .from("contingencia")
       .update({
@@ -77,7 +120,7 @@ export async function POST(request: NextRequest) {
         detalles:
           detalles ||
           (activa ? "Contingencia fase 1 activada" : "Sin contingencia"),
-        fuente: fuente || "n8n CAMe Scraper",
+        fuente: fuente || "Manual / External Webhook",
         ultima_actualizacion: new Date().toISOString(),
       })
       .eq("id", 1)
