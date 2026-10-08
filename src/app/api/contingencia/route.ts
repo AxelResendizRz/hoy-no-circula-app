@@ -24,6 +24,7 @@ async function ejecutarScrapingYActualizar() {
     htmlLower.includes("fase i") ||
     htmlLower.includes("se activa contingencia");
   const fase = activa ? 1 : 0;
+
   const { data, error } = await supabaseAdmin
     .from("contingencia")
     .update({
@@ -41,11 +42,11 @@ async function ejecutarScrapingYActualizar() {
   return data;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request?: NextRequest) {
   const isCron =
-    request.headers.get("authorization") ===
+    request?.headers?.get("authorization") ===
       `Bearer ${process.env.CRON_SECRET}` ||
-    request.nextUrl.searchParams.get("cron") === "true";
+    request?.nextUrl?.searchParams?.get("cron") === "true";
 
   if (isCron) {
     try {
@@ -56,13 +57,14 @@ export async function GET(request: NextRequest) {
         data,
       });
     } catch (err: any) {
-      console.error("Error en Vercel Cron:", err.message);
+      console.error("Error en Vercel Cron:", err?.message || err);
       return NextResponse.json(
-        { success: false, error: err.message },
+        { success: false, error: err?.message || "Error procesando el cron" },
         { status: 500 },
       );
     }
   }
+
   const { data, error } = await supabase
     .from("contingencia")
     .select("*")
