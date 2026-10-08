@@ -1,0 +1,13 @@
+name: Hoy No Circula Cron
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+jobs:
+  cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger API
+        run: curl -s "https://hoy-no-circula-app.vercel.app/api/contingencia?cron=true"
