@@ -18,7 +18,7 @@ const SITE_URL =
 const SITE_NAME = "Hoy No Circula CDMX y EDOMEX";
 const TITLE = "Hoy No Circula CDMX y EDOMEX | ¿Circula mi auto hoy?";
 const DESCRIPTION =
-  "Consulta si tu auto circula hoy en CDMX y Estado de México según tu placa, engomado y holograma. Avisos de contingencia ambiental actualizados.";
+  "Consulta si tu auto circula hoy en CDMX y Estado de México según tu placa, engomado y holograma. Avisos de contingencia ambiental actualizados cada 2 horas.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
